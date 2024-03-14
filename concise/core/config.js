@@ -1,41 +1,8 @@
-/* @flow */
+import { no, noop, identity } from 'shared/util';
 
-import {
-  no,
-  noop,
-  identity
-} from 'shared/util'
+import { LIFECYCLE_HOOKS } from 'shared/constants';
 
-import { LIFECYCLE_HOOKS } from 'shared/constants'
-
-export type Config = {
-  // user
-  optionMergeStrategies: { [key: string]: Function };
-  silent: boolean;
-  productionTip: boolean;
-  performance: boolean;
-  devtools: boolean;
-  errorHandler: ?(err: Error, vm: Component, info: string) => void;
-  warnHandler: ?(msg: string, vm: Component, trace: string) => void;
-  ignoredElements: Array<string | RegExp>;
-  keyCodes: { [key: string]: number | Array<number> };
-
-  // platform
-  isReservedTag: (x?: string) => boolean;
-  isReservedAttr: (x?: string) => boolean;
-  parsePlatformTagName: (x: string) => string;
-  isUnknownElement: (x?: string) => boolean;
-  getTagNamespace: (x?: string) => string | void;
-  mustUseProp: (tag: string, type: ?string, name: string) => boolean;
-
-  // private
-  async: boolean;
-
-  // legacy
-  _lifecycleHooks: Array<string>;
-};
-
-export default ({
+export default {
   /**
    * Option merge strategies (used in core/util/options)
    */
@@ -127,4 +94,4 @@ export default ({
    * Exposed for legacy reasons
    */
   _lifecycleHooks: LIFECYCLE_HOOKS
-}: Config)
+};

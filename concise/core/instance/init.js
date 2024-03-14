@@ -23,7 +23,11 @@ export function initMixin(Vue) {
       // internal component options needs special treatment.
       initInternalComponent(vm, options);
     } else {
-      vm.$options = mergeOptions(resolveConstructorOptions(vm.constructor), options || {}, vm);
+      vm.$options = mergeOptions(
+        resolveConstructorOptions(vm.constructor),
+        options || {},
+        vm
+      );
     }
 
     vm._renderProxy = vm;
