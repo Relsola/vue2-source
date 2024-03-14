@@ -23,7 +23,7 @@ import {
   createASTElement
 } from 'compiler/parser/index'
 
-function preTransformNode (el: ASTElement, options: CompilerOptions) {
+function preTransformNode (el, options) {
   if (el.tag === 'input') {
     const map = el.attrsMap
     if (!map['v-model']) {
