@@ -123,20 +123,10 @@ export function parse (
     if (!stack.length && element !== root) {
       // allow root elements with v-if, v-else-if and v-else
       if (root.if && (element.elseif || element.else)) {
-        if (process.env.NODE_ENV !== 'production') {
-          checkRootConstraints(element)
-        }
         addIfCondition(root, {
           exp: element.elseif,
           block: element
         })
-      } else if (process.env.NODE_ENV !== 'production') {
-        warnOnce(
-          `Component template should contain exactly one root element. ` +
-          `If you are using v-if on multiple elements, ` +
-          `use v-else-if to chain them instead.`,
-          { start: element.start }
-        )
       }
     }
     if (currentParent && !element.forbidden) {
@@ -230,37 +220,8 @@ export function parse (
         element.ns = ns
       }
 
-      if (process.env.NODE_ENV !== 'production') {
-        if (options.outputSourceRange) {
-          element.start = start
-          element.end = end
-          element.rawAttrsMap = element.attrsList.reduce((cumulated, attr) => {
-            cumulated[attr.name] = attr
-            return cumulated
-          }, {})
-        }
-        attrs.forEach(attr => {
-          if (invalidAttributeRE.test(attr.name)) {
-            warn(
-              `Invalid dynamic argument expression: attribute names cannot contain ` +
-              `spaces, quotes, <, >, / or =.`,
-              {
-                start: attr.start + attr.name.indexOf(`[`),
-                end: attr.start + attr.name.length
-              }
-            )
-          }
-        })
-      }
-
       if (isForbiddenTag(element) && !isServerRendering()) {
         element.forbidden = true
-        process.env.NODE_ENV !== 'production' && warn(
-          'Templates should only be responsible for mapping the state to the ' +
-          'UI. Avoid placing tags with side-effects in your templates, such as ' +
-          `<${tag}>` + ', as they will not be parsed.',
-          { start: element.start }
-        )
       }
 
       // apply pre-transforms
@@ -288,9 +249,6 @@ export function parse (
 
       if (!root) {
         root = element
-        if (process.env.NODE_ENV !== 'production') {
-          checkRootConstraints(root)
-        }
       }
 
       if (!unary) {
@@ -306,27 +264,11 @@ export function parse (
       // pop stack
       stack.length -= 1
       currentParent = stack[stack.length - 1]
-      if (process.env.NODE_ENV !== 'production' && options.outputSourceRange) {
-        element.end = end
-      }
       closeElement(element)
     },
 
     chars (text: string, start: number, end: number) {
       if (!currentParent) {
-        if (process.env.NODE_ENV !== 'production') {
-          if (text === template) {
-            warnOnce(
-              'Component template requires a root element, rather than just text.',
-              { start }
-            )
-          } else if ((text = text.trim())) {
-            warnOnce(
-              `text "${text}" outside root element will be ignored.`,
-              { start }
-            )
-          }
-        }
         return
       }
       // IE textarea placeholder bug
@@ -375,10 +317,6 @@ export function parse (
           }
         }
         if (child) {
-          if (process.env.NODE_ENV !== 'production' && options.outputSourceRange) {
-            child.start = start
-            child.end = end
-          }
           children.push(child)
         }
       }
@@ -391,10 +329,6 @@ export function parse (
           type: 3,
           text,
           isComment: true
-        }
-        if (process.env.NODE_ENV !== 'production' && options.outputSourceRange) {
-          child.start = start
-          child.end = end
         }
         currentParent.children.push(child)
       }
@@ -458,26 +392,6 @@ export function processElement (
 function processKey (el) {
   const exp = getBindingAttr(el, 'key')
   if (exp) {
-    if (process.env.NODE_ENV !== 'production') {
-      if (el.tag === 'template') {
-        warn(
-          `<template> cannot be keyed. Place the key on real elements instead.`,
-          getRawBindingAttr(el, 'key')
-        )
-      }
-      if (el.for) {
-        const iterator = el.iterator2 || el.iterator1
-        const parent = el.parent
-        if (iterator && iterator === exp && parent && parent.tag === 'transition-group') {
-          warn(
-            `Do not use v-for index as key on <transition-group> children, ` +
-            `this is the same as not using keys.`,
-            getRawBindingAttr(el, 'key'),
-            true /* tip */
-          )
-        }
-      }
-    }
     el.key = exp
   }
 }
@@ -496,11 +410,6 @@ export function processFor (el: ASTElement) {
     const res = parseFor(exp)
     if (res) {
       extend(el, res)
-    } else if (process.env.NODE_ENV !== 'production') {
-      warn(
-        `Invalid v-for expression: ${exp}`,
-        el.rawAttrsMap['v-for']
-      )
     }
   }
 }
@@ -557,12 +466,6 @@ function processIfConditions (el, parent) {
       exp: el.elseif,
       block: el
     })
-  } else if (process.env.NODE_ENV !== 'production') {
-    warn(
-      `v-${el.elseif ? ('else-if="' + el.elseif + '"') : 'else'} ` +
-      `used on element <${el.tag}> without corresponding v-if.`,
-      el.rawAttrsMap[el.elseif ? 'v-else-if' : 'v-else']
-    )
   }
 }
 
@@ -572,13 +475,6 @@ function findPrevElement (children: Array<any>): ASTElement | void {
     if (children[i].type === 1) {
       return children[i]
     } else {
-      if (process.env.NODE_ENV !== 'production' && children[i].text !== ' ') {
-        warn(
-          `text "${children[i].text.trim()}" between v-if and v-else(-if) ` +
-          `will be ignored.`,
-          children[i]
-        )
-      }
       children.pop()
     }
   }
@@ -605,28 +501,10 @@ function processSlotContent (el) {
   if (el.tag === 'template') {
     slotScope = getAndRemoveAttr(el, 'scope')
     /* istanbul ignore if */
-    if (process.env.NODE_ENV !== 'production' && slotScope) {
-      warn(
-        `the "scope" attribute for scoped slots have been deprecated and ` +
-        `replaced by "slot-scope" since 2.5. The new "slot-scope" attribute ` +
-        `can also be used on plain elements in addition to <template> to ` +
-        `denote scoped slots.`,
-        el.rawAttrsMap['scope'],
-        true
-      )
-    }
+
     el.slotScope = slotScope || getAndRemoveAttr(el, 'slot-scope')
   } else if ((slotScope = getAndRemoveAttr(el, 'slot-scope'))) {
     /* istanbul ignore if */
-    if (process.env.NODE_ENV !== 'production' && el.attrsMap['v-for']) {
-      warn(
-        `Ambiguous combined usage of slot-scope and v-for on <${el.tag}> ` +
-        `(v-for takes higher priority). Use a wrapper <template> for the ` +
-        `scoped slot to make it clearer.`,
-        el.rawAttrsMap['slot-scope'],
-        true
-      )
-    }
     el.slotScope = slotScope
   }
 
@@ -648,21 +526,6 @@ function processSlotContent (el) {
       // v-slot on <template>
       const slotBinding = getAndRemoveAttrByRegex(el, slotRE)
       if (slotBinding) {
-        if (process.env.NODE_ENV !== 'production') {
-          if (el.slotTarget || el.slotScope) {
-            warn(
-              `Unexpected mixed usage of different slot syntaxes.`,
-              el
-            )
-          }
-          if (el.parent && !maybeComponent(el.parent)) {
-            warn(
-              `<template v-slot> can only appear at the root level inside ` +
-              `the receiving component`,
-              el
-            )
-          }
-        }
         const { name, dynamic } = getSlotName(slotBinding)
         el.slotTarget = name
         el.slotTargetDynamic = dynamic
@@ -672,27 +535,6 @@ function processSlotContent (el) {
       // v-slot on component, denotes default slot
       const slotBinding = getAndRemoveAttrByRegex(el, slotRE)
       if (slotBinding) {
-        if (process.env.NODE_ENV !== 'production') {
-          if (!maybeComponent(el)) {
-            warn(
-              `v-slot can only be used on components or <template>.`,
-              slotBinding
-            )
-          }
-          if (el.slotScope || el.slotTarget) {
-            warn(
-              `Unexpected mixed usage of different slot syntaxes.`,
-              el
-            )
-          }
-          if (el.scopedSlots) {
-            warn(
-              `To avoid scope ambiguity, the default slot should also use ` +
-              `<template> syntax when there are other named slots.`,
-              slotBinding
-            )
-          }
-        }
         // add the component's children to its default slot
         const slots = el.scopedSlots || (el.scopedSlots = {})
         const { name, dynamic } = getSlotName(slotBinding)
@@ -720,11 +562,6 @@ function getSlotName (binding) {
   if (!name) {
     if (binding.name[0] !== '#') {
       name = 'default'
-    } else if (process.env.NODE_ENV !== 'production') {
-      warn(
-        `v-slot shorthand syntax requires a slot name.`,
-        binding
-      )
     }
   }
   return dynamicArgRE.test(name)
@@ -738,14 +575,6 @@ function getSlotName (binding) {
 function processSlotOutlet (el) {
   if (el.tag === 'slot') {
     el.slotName = getBindingAttr(el, 'name')
-    if (process.env.NODE_ENV !== 'production' && el.key) {
-      warn(
-        `\`key\` does not work on <slot> because slots are abstract outlets ` +
-        `and can possibly expand into multiple elements. ` +
-        `Use the key on a wrapping element instead.`,
-        getRawBindingAttr(el, 'key')
-      )
-    }
   }
 }
 
@@ -783,14 +612,6 @@ function processAttrs (el) {
         isDynamic = dynamicArgRE.test(name)
         if (isDynamic) {
           name = name.slice(1, -1)
-        }
-        if (
-          process.env.NODE_ENV !== 'production' &&
-          value.trim().length === 0
-        ) {
-          warn(
-            `The value for a v-bind expression cannot be empty. Found in "v-bind:${name}"`
-          )
         }
         if (modifiers) {
           if (modifiers.prop && !isDynamic) {
@@ -866,24 +687,9 @@ function processAttrs (el) {
           }
         }
         addDirective(el, name, rawName, value, arg, isDynamic, modifiers, list[i])
-        if (process.env.NODE_ENV !== 'production' && name === 'model') {
-          checkForAliasModel(el, value)
-        }
       }
     } else {
       // literal attribute
-      if (process.env.NODE_ENV !== 'production') {
-        const res = parseText(value, delimiters)
-        if (res) {
-          warn(
-            `${name}="${value}": ` +
-            'Interpolation inside attributes has been removed. ' +
-            'Use v-bind or the colon shorthand instead. For example, ' +
-            'instead of <div id="{{ val }}">, use <div :id="val">.',
-            list[i]
-          )
-        }
-      }
       addAttr(el, name, JSON.stringify(value), list[i])
       // #6887 firefox doesn't update muted state if set via attribute
       // even immediately after element creation
@@ -919,12 +725,6 @@ function parseModifiers (name: string): Object | void {
 function makeAttrsMap (attrs: Array<Object>): Object {
   const map = {}
   for (let i = 0, l = attrs.length; i < l; i++) {
-    if (
-      process.env.NODE_ENV !== 'production' &&
-      map[attrs[i].name] && !isIE && !isEdge
-    ) {
-      warn('duplicate attribute: ' + attrs[i].name, attrs[i])
-    }
     map[attrs[i].name] = attrs[i].value
   }
   return map

@@ -169,9 +169,6 @@ export function parseHTML (html, options) {
 
     if (html === last) {
       options.chars && options.chars(html)
-      if (process.env.NODE_ENV !== 'production' && !stack.length && options.warn) {
-        options.warn(`Mal-formatted tag at end of template: "${html}"`, { start: index + html.length })
-      }
       break
     }
   }
@@ -236,10 +233,6 @@ export function parseHTML (html, options) {
         name: args[1],
         value: decodeAttr(value, shouldDecodeNewlines)
       }
-      if (process.env.NODE_ENV !== 'production' && options.outputSourceRange) {
-        attrs[i].start = args.start + args[0].match(/^\s*/).length
-        attrs[i].end = args.end
-      }
     }
 
     if (!unary) {
@@ -273,15 +266,6 @@ export function parseHTML (html, options) {
     if (pos >= 0) {
       // Close all the open elements, up the stack
       for (let i = stack.length - 1; i >= pos; i--) {
-        if (process.env.NODE_ENV !== 'production' &&
-          (i > pos || !tagName) &&
-          options.warn
-        ) {
-          options.warn(
-            `tag <${stack[i].tag}> has no matching end tag.`,
-            { start: stack[i].start, end: stack[i].end }
-          )
-        }
         if (options.end) {
           options.end(stack[i].tag, start, end)
         }

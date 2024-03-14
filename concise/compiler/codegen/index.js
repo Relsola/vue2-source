@@ -131,10 +131,6 @@ function genOnce (el: ASTElement, state: CodegenState): string {
       parent = parent.parent
     }
     if (!key) {
-      process.env.NODE_ENV !== 'production' && state.warn(
-        `v-once can only be used inside v-for that is keyed. `,
-        el.rawAttrsMap['v-once']
-      )
       return genElement(el, state)
     }
     return `_o(${genElement(el, state)},${state.onceId++},${key})`
