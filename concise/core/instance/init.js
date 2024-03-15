@@ -11,16 +11,16 @@ let uid = 0;
 export function initMixin(Vue) {
   Vue.prototype._init = function (options) {
     const vm = this;
-    // a uid
-    vm._uid = uid++;
+    vm._uid = uid++; // 唯一自增 uid
 
-    // a flag to avoid this being observed
+    // 避免重复被观察
     vm._isVue = true;
-    // merge options
+
+    // 组件初始化时的配置合并（
+    // 通过判断 options 上有没有 _isComponent 属性来确定是否是组件
     if (options && options._isComponent) {
-      // optimize internal component instantiation
-      // since dynamic options merging is pretty slow, and none of the
-      // internal component options needs special treatment.
+      // 每个子组件初始化时走这里，这里只做了一些性能优化
+      // 将组件配置对象上的一些深层次属性放到 vm.$options 选项中，以提高代码的执行效率
       initInternalComponent(vm, options);
     } else {
       vm.$options = mergeOptions(
@@ -30,10 +30,10 @@ export function initMixin(Vue) {
       );
     }
 
+    // 设置代理，将 vm 实例上的属性代理到 vm._renderProxy
     vm._renderProxy = vm;
-
-    // expose real self
     vm._self = vm;
+
     initLifecycle(vm);
     initEvents(vm);
     initRender(vm);
