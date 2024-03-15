@@ -11,11 +11,8 @@ const isSpecialTag = makeMap('script,style,template', true);
 /**
  * Parse a single-file component (*.vue) file into an SFC Descriptor Object.
  */
-export function parseComponent(
-  content: string,
-  options?: Object = {}
-): SFCDescriptor {
-  const sfc: SFCDescriptor = {
+export function parseComponent(content, options = {}) {
+  const sfc = {
     template: null,
     script: null,
     styles: [],
@@ -23,19 +20,13 @@ export function parseComponent(
     errors: []
   };
   let depth = 0;
-  let currentBlock: ?SFCBlock = null;
+  let currentBlock = null;
 
   let warn = msg => {
     sfc.errors.push(msg);
   };
 
-  function start(
-    tag: string,
-    attrs: Array<ASTAttr>,
-    unary: boolean,
-    start: number,
-    end: number
-  ) {
+  function start(tag, attrs, unary, start, end) {
     if (depth === 0) {
       currentBlock = {
         type: tag,
@@ -63,7 +54,7 @@ export function parseComponent(
     }
   }
 
-  function checkAttrs(block: SFCBlock, attrs: Array<ASTAttr>) {
+  function checkAttrs(block, attrs) {
     for (let i = 0; i < attrs.length; i++) {
       const attr = attrs[i];
       if (attr.name === 'lang') {
@@ -81,7 +72,7 @@ export function parseComponent(
     }
   }
 
-  function end(tag: string, start: number) {
+  function end(tag, start) {
     if (depth === 1 && currentBlock) {
       currentBlock.end = start;
       let text = content.slice(currentBlock.start, currentBlock.end);
@@ -99,7 +90,7 @@ export function parseComponent(
     depth--;
   }
 
-  function padContent(block: SFCBlock, pad: true | 'line' | 'space') {
+  function padContent(block, pad) {
     if (pad === 'space') {
       return content.slice(0, block.start).replace(replaceRE, ' ');
     } else {
