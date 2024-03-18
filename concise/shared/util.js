@@ -1,4 +1,4 @@
-/* @flow */
+/* update */
 
 export const emptyObject = Object.freeze({});
 
